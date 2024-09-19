@@ -19,7 +19,6 @@ func (app *application) connect(conn net.Conn) {
 	_, err := conn.Read(buffer)
 	if err != nil {
 		app.logger.Error(err.Error())
-	
 	}
 
 	app.logger.Info("Processing the request")
