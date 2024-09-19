@@ -7,12 +7,13 @@ This application will demonstrate how to set up a TCP connection using Go.
 Transmission Control Protocol (TCP) is built on top of the Internet Protocol Suite (TCP/IP) and establishes a connection between two computers. A request is sent from the client to the server and the response is sent back. A TCP connection guarantees delivery because data packets are transmitted in segments, and the protocol ensures that packets are received in the correct order. If any packet is lost or out of order, TCP handles retransmission, maintaining reliable data transfer. This connection is handled through a three-step "handshake" process: SYN, SYN-ACK, and ACK, which synchronizes both ends. Once the connection is established, data is transmitted in segments, and TCP ensures that all segments arrive intact and in order.
 
 ```go
-// Instead of using log, I am opting for more granular logging by using depedency injection. This pattern also allows us to create new universal methods attached to our application that will recieve the app struct
+// Instead of using log, I am opting for more granular logging by using depedency injection. This pattern also allows us to create new universal methods attached to our application. Totally unnecessary for this demo, but it's a habit I'd like to establish with Go projects
 type application struct {
 	logger *slog.Logger
 }
 
 func (app *application) connect(conn net.Conn) {
+     // we will break things down into packets for the connection to read
 	var buffer []byte = make([]byte, 1024)
 	// Now that the connection is established, we can read the request
 	_, err := conn.Read(buffer)
@@ -36,12 +37,12 @@ func main() {
 	app := &application{
 		logger: logger,
 	}
-	// First we estalbish the connection with our local server and listen to a specified port on the server
+	// First we establish the connection with our local server and listen to a specified port on the server
 	listener, err := net.Listen("tcp", ":8080")
 	if err != nil {
 		app.logger.Error(err.Error())
 	}
-	// This is an infinite loop to keep the conneciton alive
+	// This is an infinite loop to keep the connection alive
 	for {
 		logger.Info("Waiting for client to connect")
 		// This is awaiting the connection and establishing a client. This is a blocking call, so the server will not proceed until this receives data
@@ -52,7 +53,7 @@ func main() {
 		app.logger.Info("Client connected!")
 		// Process the request and configure response
 		// by using the go keyword we are attaching that connection to a thread, allowing our server to handle multiple requests
-        // This also decouples each TCP connection to handle its own read, write processes
+            // This also decouples each TCP connection to handle its own read, write processes
 		go app.connect(conn)
 	}
 }
