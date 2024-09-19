@@ -23,7 +23,7 @@ func (app *application) connect(conn net.Conn) {
 
 	app.logger.Info("Processing the request")
 	time.Sleep(5 * time.Second)
-	// Since we will test this with cURL, the response should be formatted as an HTTP response header
+	// Since we will test this with cURL, the response should be formatted as an HTTP response
 	res := "HTTP/1.1 200 OK\r\n\r\nHello, World!\r\n"
 
 	conn.Write([]byte(res))
