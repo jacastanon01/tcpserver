@@ -59,3 +59,18 @@ func main() {
 ```
 
 Currently, there are optimization issues if multiple clients try to open a thread at once, but this is a general overview of how computers communicate over the internet using TCP.
+
+## Thread pools
+
+A thread is a group of worker threads that are used to execute tasks concurrently. Whenever we want a thread, we pick from the pool and delegate a task to it. Once the task is completed, we add the thread back to the thread pool. This pattern allows us to handle multiple concurrent requests without overwhelming the hardware by distributing tasks evenly and capping the size of threads in our thread pool.
+
+### Why Thread Pools with Go?
+
+> By default, using `go` statements for every connection can create an unbounded number of goroutines, which might cause memory issues under heavy load. A goroutine pool (similar to a thread pool) limits the number of active goroutines, ensuring your system handles concurrency within its limits.
+> Technically, Go does not use operating system (OS) threads directly in the same way traditional languages do; instead, Go has concurrency built into the language, offering developers flexibility in handling multiple tasks. While goroutines are not 1:1 mapped to OS threads, the Go runtime employs a more efficient model. When a goroutine is created, the Go runtime dynamically assigns it to an OS thread and manages the execution of thousands or even millions of goroutines without exhausting system resources.
+> Because this scheduling happens at runtime, Go efficiently selects which OS threads to use for which goroutine. This allows Go to handle multiple tasks concurrently, even in the presence of blocking operations (such as I/O). The Go runtime scheduler ensures that blocking operations do not block an OS thread; instead, it can schedule another goroutine to run on that thread, maximizing concurrency and performance.
+
+- ChatGPT 🤖
+
+
+### Worker Pool
