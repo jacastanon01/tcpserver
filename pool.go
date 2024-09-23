@@ -1,9 +1,7 @@
 package main
 
 import (
-	"fmt"
 	"sync"
-	"time"
 )
 
 type Job func()
@@ -37,17 +35,4 @@ func NewPool(workerCount int) *Pool {
 		}()
 	}
 	return pool
-}
-
-func otherMain() {
-	pool := NewPool(5)
-
-	for i := 0; i < 30; i++ {
-		job := func() {
-			time.Sleep(1 * time.Second)
-			fmt.Printf("Job completed\n")
-		}
-		pool.AddJob(job)
-	}
-	pool.Wait()
 }
