@@ -1,14 +1,11 @@
 package main
 
 import (
-	// "fmt"
 	"log/slog"
 	"net"
 	"os"
 	"time"
 )
-
-//  TODO: Implement thread timeout and thread pool https://beckmoulton.medium.com/gos-thread-pool-and-coroutine-pool-you-will-understand-after-reading-this-article-bfc083f17e7d
 
 // Instead of using log, I am opting for more granular logging by using depedency injection. This pattern also allows us to create new universal methods attached to our application that will recieve the app struct
 type application struct {
@@ -36,7 +33,7 @@ func (app *application) connect(conn net.Conn) {
 }
 
 func main() {
-	// pool := NewPool(5)
+	pool := NewPool(5)
 	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
 	app := &application{
 		logger: logger,
@@ -54,19 +51,26 @@ func main() {
 		conn, err := listener.Accept()
 		if err != nil {
 			logger.Error(err.Error())
-			continue
+			continue // continue to next iteration if there is an error
 		}
 		app.logger.Info("Client connected!")
+
 		// Process the request and configure response
 		// by using the go keyword we are attaching that connection to a thread, allowing our server to handle multiple requests
-		go app.connect(conn)
+		// go app.connect(conn)
 
-		// job := func() {
-		// 	defer conn.Close()
-		// 	app.connect(conn)
-		// 	fmt.Printf("Job completed\n")
-		// }
-		// pool.AddJob(job)
+		job := func() {
+			// Set a dealine to handle a graceful exit if connection is open with no activity for 5 seconds
+			err := conn.SetDeadline(time.Now().Add(5 * time.Second))
+			// TODO Handle shutdown of connections and server
+			if err != nil {
+				os.Exit(1)
+			}
+			defer conn.Close() // Ensure the connection is closed after processing the request
+			app.connect(conn)  // Process the connection (read request and send response)
+			app.logger.Info("Job completed!")
+		}
+		// Add the job to the pool to be processed by an available worker
+		pool.AddJob(job)
 	}
-
 }
