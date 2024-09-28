@@ -5,8 +5,8 @@ import (
 	"log/slog"
 	"net"
 	"os"
-	"os/signal"
-	"syscall"
+	// "os/signal"
+	// "syscall"
 	"time"
 )
 
@@ -50,7 +50,7 @@ func main() {
 
 	// create channel to listen for signals. Channel will be buffered by 1 byte
 	buff := make(chan os.Signal, 1)
-	signal.Notify(buff, syscall.SIGINT, syscall.SIGTERM)
+	// signal.Notify(buff, syscall.SIGINT, syscall.SIGTERM)
 	done := make(chan bool)
 	go func() {
 		// receive signal
