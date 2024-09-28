@@ -1,9 +1,12 @@
 package main
 
 import (
+	"fmt"
 	"log/slog"
 	"net"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 )
 
@@ -44,6 +47,28 @@ func main() {
 		app.logger.Error(err.Error())
 		return
 	}
+
+	// create channel to listen for signals. Channel will be buffered by 1 byte
+	buff := make(chan os.Signal, 1)
+	signal.Notify(buff, syscall.SIGINT, syscall.SIGTERM)
+	done := make(chan bool)
+	go func() {
+		// receive signal
+		sig := <-buff
+		fmt.Println("Received signal: ", sig)
+
+		listener.Close()
+		timeout := time.After(10 * time.Second)
+
+		select {
+		case <-timeout:
+			fmt.Println("Timed out of conneciton")
+		case <-done:
+			pool.Wait()
+			fmt.Println("All jobs completed!")
+		}
+
+	}()
 	// This is an infinite loop to keep the conneciton alive
 	for {
 		logger.Info("Waiting for client to connect")
@@ -60,12 +85,6 @@ func main() {
 		// go app.connect(conn)
 
 		job := func() {
-			// Set a dealine to handle a graceful exit if connection is open with no activity for 5 seconds
-			err := conn.SetDeadline(time.Now().Add(5 * time.Second))
-			// TODO Handle shutdown of connections and server
-			if err != nil {
-				os.Exit(1)
-			}
 			defer conn.Close() // Ensure the connection is closed after processing the request
 			app.connect(conn)  // Process the connection (read request and send response)
 			app.logger.Info("Job completed!")
@@ -73,4 +92,5 @@ func main() {
 		// Add the job to the pool to be processed by an available worker
 		pool.AddJob(job)
 	}
+
 }
